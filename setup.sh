@@ -13,4 +13,9 @@ echo "=== Installing Stremio (beta) ==="
 flatpak install -y flathub-beta com.stremio.Stremio
 
 echo ""
+echo "=== Installing Helium Browser ==="
+brew tap tb516/helium-browser-linux
+brew install helium-browser-linux
+
+echo ""
 echo "Done."
