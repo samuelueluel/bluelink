@@ -6,7 +6,7 @@ flatpak remote-add --if-not-exists flathub-beta https://flathub.org/beta-repo/fl
 
 echo ""
 echo "=== Installing codecs ==="
-flatpak install -y flathub org.freedesktop.Platform.ffmpeg-full
+flatpak install -y flathub org.freedesktop.Platform.ffmpeg-full//24.08
 
 echo ""
 echo "=== Installing Stremio (beta) ==="
