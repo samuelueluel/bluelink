@@ -1,0 +1,39 @@
+tap "ublue-os/tap"
+tap "tb516/helium-browser-linux"
+
+# Browsers
+cask "helium-browser-linux"
+
+# Casks
+cask "claude-code@latest"
+cask "antigravity-cli-linux"
+
+# CLI tools
+brew "atuin"       # shell history with SQLite backend and Ctrl+R search
+brew "bat"         # cat with syntax highlighting
+brew "dust"        # du replacement with visual tree
+brew "duf"         # df replacement with visual output
+brew "eza"         # ls replacement with colors/icons/git info
+brew "fastfetch"   # system info fetcher
+brew "fd"          # find replacement
+brew "gh"          # GitHub CLI
+brew "git-delta"   # syntax-highlighted git diff pager
+brew "bottom"      # htop alternative with graphs; command: btm
+brew "cava"        # console-based audio visualizer
+brew "glow"        # Markdown renderer for the terminal
+brew "lazygit"     # TUI for git
+brew "chafa"       # terminal image renderer with Sixel/Kitty support
+brew "ripgrep"     # grep replacement
+brew "television"  # fuzzy finder TUI with live previews
+brew "tealdeer"    # simplified man pages (fast Rust tldr client)
+brew "yq"          # jq-style processor for YAML/TOML/XML
+brew "ouch"        # archive tool (zip, tar, gz, zst, etc.)
+brew "vdirsyncer"  # sync CalDAV/CardDAV calendars/contacts to local storage
+brew "yt-dlp"      # video downloader
+brew "starship"    # cross-shell prompt
+brew "zoxide"      # smart cd replacement
+brew "fzf-tab"     # replace zsh completion menu with fzf
+brew "pipx"        # isolated Python CLI tool installer
+
+# Fonts
+cask "font-crimson-pro"

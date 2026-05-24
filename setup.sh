@@ -1,21 +1,84 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Adding Flathub Beta ==="
-flatpak remote-add --if-not-exists flathub-beta https://flathub.org/beta-repo/flathub-beta.flatpakrepo
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BOX="arch-box"
+
+# ── GNOME: power / display / cursor ───────────────────────────────────────────
+echo "=== Configuring GNOME settings ==="
+
+# Disable sleep, suspend, idle dim
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing'
+gsettings set org.gnome.settings-daemon.plugins.power idle-dim false
+
+# Disable screen blank and auto-lock (manual screensaver still works)
+gsettings set org.gnome.desktop.session idle-delay 0
+gsettings set org.gnome.desktop.screensaver lock-enabled false
+
+# Display scale 300%
+gsettings set org.gnome.desktop.interface scaling-factor 3
+
+# Larger cursor (2× the default 24px)
+gsettings set org.gnome.desktop.interface cursor-size 48
+
+# ── Auto-login ────────────────────────────────────────────────────────────────
+echo ""
+echo "=== Enabling auto-login for $USER ==="
+sudo tee /etc/gdm/custom.conf > /dev/null << EOF
+[daemon]
+AutomaticLoginEnable=True
+AutomaticLogin=$USER
+EOF
+
+# ── Dotfiles ──────────────────────────────────────────────────────────────────
+echo ""
+echo "=== Installing dotfiles ==="
+cp "$SCRIPT_DIR/dot_zshrc" "$HOME/.zshrc"
+mkdir -p "$HOME/.config"
+cp "$SCRIPT_DIR/dot_config/starship.toml" "$HOME/.config/starship.toml"
+
+# ── Homebrew ──────────────────────────────────────────────────────────────────
+echo ""
+echo "=== Setting up Homebrew ==="
+if ! command -v brew &>/dev/null; then
+  echo "Homebrew not found — installing..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
 
 echo ""
-echo "=== Installing codecs ==="
-flatpak install -y flathub org.freedesktop.Platform.ffmpeg-full//24.08
+echo "=== Installing Brew packages ==="
+brew bundle --file="$SCRIPT_DIR/Brewfile"
+
+# ── Arch distrobox ────────────────────────────────────────────────────────────
+echo ""
+echo "=== Creating Arch Linux distrobox ==="
+distrobox create --name "$BOX" --image archlinux:latest --yes
 
 echo ""
-echo "=== Installing Stremio (beta) ==="
-flatpak install -y flathub-beta com.stremio.Stremio
+echo "=== Installing yay ==="
+distrobox enter --name "$BOX" -- bash -c '
+  set -euo pipefail
+  sudo pacman -Syu --noconfirm
+  sudo pacman -S --noconfirm base-devel git
+  cd /tmp
+  rm -rf yay-bin
+  git clone https://aur.archlinux.org/yay-bin.git
+  cd yay-bin
+  makepkg -si --noconfirm
+'
 
 echo ""
-echo "=== Installing Helium Browser ==="
-brew tap tb516/helium-browser-linux
-brew install helium-browser-linux
+echo "=== Installing Stremio and codecs ==="
+distrobox enter --name "$BOX" -- bash -c '
+  set -euo pipefail
+  yay -S --noconfirm stremio ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
+'
+
+echo ""
+echo "=== Exporting Stremio as native app ==="
+distrobox enter --name "$BOX" -- distrobox-export --app stremio
 
 echo ""
 echo "Done."

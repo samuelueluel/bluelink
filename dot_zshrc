@@ -1,0 +1,197 @@
+umask 002
+export EDITOR=zed
+export SUDO_EDITOR=zed
+
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=50000
+setopt extendedglob
+unsetopt beep
+
+# Vi mode
+bindkey -v
+KEYTIMEOUT=1
+
+# Cursor: beam in insert, block in normal
+function zle-keymap-select {
+  if [[ ${KEYMAP} == vicmd ]]; then
+    echo -ne '\e[2 q\e]12;#FFA726\a'  # block + gold (normal/nav)
+  else
+    echo -ne '\e[2 q\e]12;#00B6C2\a'  # block + teal (insert/type)
+  fi
+}
+zle -N zle-keymap-select
+function zle-line-init { echo -ne '\e[2 q\e]12;#00B6C2\a' }
+zle -N zle-line-init
+
+# History (large, shared across sessions, deduped)
+setopt APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_REDUCE_BLANKS
+setopt INC_APPEND_HISTORY
+
+# Better globbing tools
+setopt EXTENDED_GLOB
+
+# Quality-of-life: no terminal bell
+unsetopt BEEP
+
+# Safer glob behavior
+setopt NOMATCH
+
+# Modern CLI defaults if installed
+command -v eza >/dev/null && alias ls='eza --group-directories-first --icons'
+command -v eza >/dev/null && alias ll='eza -lah --group-directories-first --icons'
+command -v bat >/dev/null && alias cat='bat'
+
+# Cache dir for init scripts
+ZSH_CACHE="$HOME/.cache/zsh"
+[[ -d "$ZSH_CACHE" ]] || mkdir -p "$ZSH_CACHE"
+
+# fzf global options (colors, keybinds, UI)
+export FZF_DEFAULT_OPTS="--bind 'alt-w:up,alt-s:down,alt-a:backward-char,alt-d:forward-char,alt-space:accept' --gutter=' ' --scrollbar='█' --color='bg:-1,gutter:-1,border:#7A2E2E,separator:#D0A7AF,preview-border:#D0A7AF,hl:#FFA726,hl+:#FFA726,pointer:#FFA726,marker:#FFA726,bg+:#000000,prompt:#FFA726,info:#D0A7AF,header:#D0A7AF,scrollbar:#FFA726'"
+
+# zoxide: smart cd
+if command -v zoxide >/dev/null; then
+  [[ -f "$ZSH_CACHE/zoxide.zsh" ]] || zoxide init zsh > "$ZSH_CACHE/zoxide.zsh"
+  source "$ZSH_CACHE/zoxide.zsh"
+fi
+
+# atuin: shell history
+if command -v atuin >/dev/null; then
+  if [[ -f /usr/share/turquoise/image-id || -f /usr/share/samuel-niri/image-id ]]; then
+    export ATUIN_DATA_DIR="$HOME/.local/share/atuin-samuel"
+  else
+    export ATUIN_DATA_DIR="$HOME/.local/share/atuin-samuel-bluefin"
+  fi
+  export ATUIN_THEME_DIR="$HOME/.config/atuin/themes"
+  [[ -f "$ZSH_CACHE/atuin.zsh" ]] || atuin init zsh > "$ZSH_CACHE/atuin.zsh"
+  source "$ZSH_CACHE/atuin.zsh"
+fi
+
+# fzf keybindings/completion
+for f in /usr/share/fzf/shell/key-bindings.zsh /usr/share/fzf/shell/completion.zsh; do
+  [ -f "$f" ] && source "$f"
+done
+
+# SSH agent via systemd socket (enable with: sjust ssh-setup)
+[[ -S "$XDG_RUNTIME_DIR/ssh-agent.socket" ]] && export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
+# Completion (optimized)
+autoload -Uz compinit
+if [[ -n ${ZDOTDIR:-$HOME}/.zcompdump(#qN.m-1) ]]; then
+  compinit -C -u
+else
+  compinit -u
+fi
+
+# Plugins (order matters: highlighting should be last)
+[[ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+bindkey '^F' autosuggest-accept
+source /home/linuxbrew/.linuxbrew/opt/fzf-tab/share/fzf-tab/fzf-tab.zsh
+[[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# Recommended options
+unsetopt BEEP
+setopt NOMATCH
+setopt EXTENDED_GLOB
+
+# Starship prompt
+if command -v starship >/dev/null; then
+  [[ -f "$ZSH_CACHE/starship.zsh" ]] || starship init zsh > "$ZSH_CACHE/starship.zsh"
+  source "$ZSH_CACHE/starship.zsh"
+fi
+
+# Ghostty shell integration (fallback if auto-injection didn't run)
+if [[ "$TERM_PROGRAM" == "ghostty" ]]; then
+  builtin source /usr/share/ghostty/shell-integration/zsh/ghostty-integration
+fi
+
+# PATH is set via ~/.config/environment.d/10-path.conf
+
+# Autosuggestions: gray slot for ghost/unobtrusive text
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+
+# Syntax highlighting: map to custom palette (only when plugin is loaded)
+if (( ${+ZSH_HIGHLIGHT_STYLES} )); then
+ZSH_HIGHLIGHT_STYLES[default]='fg=0'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=1'
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg=4'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=2'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=2'
+ZSH_HIGHLIGHT_STYLES[function]='fg=2'
+ZSH_HIGHLIGHT_STYLES[command]='fg=2'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg=4'
+ZSH_HIGHLIGHT_STYLES[commandseparator]='fg=0'
+ZSH_HIGHLIGHT_STYLES[path]='fg=0'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg=4'
+ZSH_HIGHLIGHT_STYLES[history-expansion]='fg=4'
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=5'
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=5'
+ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg=6'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg=5'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg=5'
+ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='fg=5'
+ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='fg=4'
+ZSH_HIGHLIGHT_STYLES[assign]='fg=0'
+ZSH_HIGHLIGHT_STYLES[redirection]='fg=4'
+ZSH_HIGHLIGHT_STYLES[comment]='fg=8'
+ZSH_HIGHLIGHT_STYLES[arg0]='fg=2'
+fi
+
+# Night light toggles
+alias night-on="pkill wlsunset; nohup wlsunset -l 35.7 -L -105.9 >/dev/null 2>&1 &"
+alias night-off="pkill wlsunset"
+
+# fzf-tab: use the global fzf options
+zstyle ':fzf-tab:*' use-fzf-default-opts yes
+
+# Television: smart shell autocomplete (^T)
+if command -v tv >/dev/null; then
+  if [[ ! -f "$ZSH_CACHE/television.zsh" ]]; then
+    tv init zsh > "$ZSH_CACHE/television.zsh"
+    # Fix: Ensure enter key always confirms (pastes) during shell autocomplete
+    # instead of triggering the channel's default action (like opening a file).
+    sed -i 's/tv "$dir"/tv "$dir" --keybindings='\''enter="confirm_selection"'\''/' "$ZSH_CACHE/television.zsh"
+    sed -i 's/| tv /| tv --keybindings='\''enter="confirm_selection"'\'' /' "$ZSH_CACHE/television.zsh"
+  fi
+  source "$ZSH_CACHE/television.zsh"
+  # Restore Atuin history if it was overwritten
+  if (( $+functions[atuin-search] )); then
+    bindkey '^R' atuin-search
+  fi
+fi
+
+# Snippets (via Television)
+if command -v tv >/dev/null; then
+  # pets: search and execute a snippet via television
+  function pets() {
+    tv "Snippets"
+  }
+
+  # prev: save the last executed command as a snippet
+  function prev() {
+    local last=$(fc -lrn | head -1 | xargs)
+    echo -n "Description for '$last': "
+    read desc
+    if [[ -n "$desc" ]]; then
+      echo "- $desc | $last" >> "$HOME/.config/television/snippets.md"
+      echo "Saved to Snippets. (Run 'chezmoi add ~/.config/television/snippets.md' to persist to dotfiles)"
+    fi
+  }
+fi
+
+# Auto-load SSH key on first terminal (added by sjust ssh-setup)
+[[ -S "$SSH_AUTH_SOCK" ]] && { ssh-add -l &>/dev/null || SSH_ASKPASS_REQUIRE=never ssh-add ~/.ssh/id_ed25519 &>/dev/null; }
+
+# headroom wrap for claude
+export HEADROOM_REQUIRE_RUST_CORE=false
+function claude() {
+    if command -v headroom >/dev/null; then
+        headroom wrap claude "$@"
+    else
+        command claude "$@"
+    fi
+}
