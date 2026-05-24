@@ -57,6 +57,8 @@ echo "=== Removing existing distrobox and exports ==="
 distrobox stop "$BOX" 2>/dev/null || true
 distrobox rm --force "$BOX" 2>/dev/null || true
 rm -f "$HOME/.local/share/applications/"*stremio* 2>/dev/null || true
+rm -f "$HOME/.local/bin/"*stremio* 2>/dev/null || true
+rm -rf "$HOME/.config/stremio-enhanced" 2>/dev/null || true
 
 echo ""
 echo "=== Creating Arch Linux distrobox ==="
