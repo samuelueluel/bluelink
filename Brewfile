@@ -37,3 +37,5 @@ brew "pipx"        # isolated Python CLI tool installer
 
 # Fonts
 cask "font-crimson-pro"
+cask "font-jetbrains-mono-nerd-font"
+cask "font-jetbrains-mono"
