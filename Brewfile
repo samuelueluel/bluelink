@@ -2,7 +2,7 @@ tap "ublue-os/tap"
 tap "tb516/helium-browser-linux"
 
 # Browsers
-cask "helium-browser-linux"
+brew "helium-browser-linux"
 
 # Casks
 cask "claude-code@latest"
