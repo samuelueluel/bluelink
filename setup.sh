@@ -79,12 +79,21 @@ echo ""
 echo "=== Installing Stremio and codecs ==="
 distrobox enter --name "$BOX" -- bash -c '
   set -euo pipefail
-  yay -S --noconfirm stremio ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
+  yay -S --noconfirm stremio-enhanced-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
+'
+
+echo ""
+echo "=== Downloading Stremio server.js ==="
+distrobox enter --name "$BOX" -- bash -c '
+  set -euo pipefail
+  mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
+  wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
+    "https://dl.strem.io/server/v4.20.17/desktop/server.js"
 '
 
 echo ""
 echo "=== Exporting Stremio as native app ==="
-distrobox enter --name "$BOX" -- distrobox-export --app stremio
+distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
 
 echo ""
 echo "Done."
