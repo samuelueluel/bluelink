@@ -88,7 +88,7 @@ distrobox enter --name "$BOX" -- bash -c '
   set -euo pipefail
   mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
   wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
-    "https://dl.strem.io/server/v4.20.17/desktop/server.js"
+    "https://dl.strem.io/server/v4.20.18/desktop/server.js"
 '
 
 echo ""
