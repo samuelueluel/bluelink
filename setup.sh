@@ -22,6 +22,20 @@ gsettings set org.gnome.desktop.interface scaling-factor 3
 # Larger cursor (2× the default 24px)
 gsettings set org.gnome.desktop.interface cursor-size 48
 
+# ── Ptyxis: terminal font ─────────────────────────────────────────────────────
+echo ""
+echo "=== Setting Ptyxis font to JetBrains Mono Nerd Font ==="
+# Fonts are installed by brew bundle above, but that runs later — this block
+# is idempotent so rerunning after brew is fine.
+PTYXIS_PROFILES=$(gsettings get org.gnome.Ptyxis profiles 2>/dev/null \
+  | tr -d "[]' " | tr ',' '\n')
+for _PROFILE in $PTYXIS_PROFILES; do
+  [ -z "$_PROFILE" ] && continue
+  _PATH="org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$_PROFILE/"
+  gsettings set "$_PATH" use-system-font false
+  gsettings set "$_PATH" custom-font 'JetBrainsMono Nerd Font 12'
+done
+
 # ── Auto-login ────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Enabling auto-login for $USER ==="
@@ -96,6 +110,11 @@ distrobox enter --name "$BOX" -- bash -c '
 echo ""
 echo "=== Exporting Stremio as native app ==="
 distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
+
+# ── Flatpaks ──────────────────────────────────────────────────────────────────
+echo ""
+echo "=== Installing Flatpaks ==="
+flatpak install -y flathub org.gnome.eog
 
 echo ""
 echo "Done."
