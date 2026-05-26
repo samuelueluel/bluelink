@@ -39,7 +39,7 @@ done
 # ── Auto-login ────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Enabling auto-login for $USER ==="
-sudo tee /etc/gdm/custom.conf > /dev/null << EOF
+sudo tee /etc/gdm/custom.conf > /dev/null << EOF || echo "WARNING: could not set auto-login (skipping — configure manually if needed)"
 [daemon]
 AutomaticLoginEnable=True
 AutomaticLogin=$USER
