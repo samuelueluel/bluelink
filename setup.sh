@@ -4,6 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOX="arch-box"
 
+# ── Error trap ────────────────────────────────────────────────────────────────
+trap 'echo ""; echo "❌ FAILED at line $LINENO: $BASH_COMMAND"; exit 1' ERR
+
 # ── GNOME: power / display / cursor ───────────────────────────────────────────
 echo "=== Configuring GNOME settings ==="
 
