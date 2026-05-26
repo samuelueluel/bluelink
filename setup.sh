@@ -114,7 +114,7 @@ distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Installing Flatpaks ==="
-flatpak install -y flathub org.gnome.eog
+flatpak install -y flathub org.kde.gwenview
 
 echo ""
 echo "Done."
