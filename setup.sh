@@ -3,6 +3,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOX="arch-box"
+SKIP_DISTROBOX=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --skip-distrobox) SKIP_DISTROBOX=true ;;
+    *) echo "Unknown argument: $arg"; exit 1 ;;
+  esac
+done
 
 # ── Error trap ────────────────────────────────────────────────────────────────
 trap 'echo ""; echo "❌ FAILED at line $LINENO: $BASH_COMMAND"; exit 1' ERR
@@ -74,48 +82,52 @@ brew bundle --file="$SCRIPT_DIR/Brewfile"
 
 # ── Arch distrobox ────────────────────────────────────────────────────────────
 echo ""
-echo "=== Removing existing distrobox and exports ==="
-distrobox rm --force --yes "$BOX" 2>/dev/null || true
-rm -f "$HOME/.local/share/applications/"*stremio* 2>/dev/null || true
-rm -f "$HOME/.local/bin/"*stremio* 2>/dev/null || true
-rm -rf "$HOME/.config/stremio-enhanced" 2>/dev/null || true
+if $SKIP_DISTROBOX; then
+  echo "=== Skipping distrobox setup (--skip-distrobox) ==="
+else
+  echo "=== Removing existing distrobox and exports ==="
+  distrobox rm --force --yes "$BOX" 2>/dev/null || true
+  rm -f "$HOME/.local/share/applications/"*stremio* 2>/dev/null || true
+  rm -f "$HOME/.local/bin/"*stremio* 2>/dev/null || true
+  rm -rf "$HOME/.config/stremio-enhanced" 2>/dev/null || true
 
-echo ""
-echo "=== Creating Arch Linux distrobox ==="
-distrobox create --name "$BOX" --image archlinux:latest --yes
+  echo ""
+  echo "=== Creating Arch Linux distrobox ==="
+  distrobox create --name "$BOX" --image archlinux:latest --yes
 
-echo ""
-echo "=== Installing yay ==="
-distrobox enter --name "$BOX" -- bash -c '
-  set -euo pipefail
-  sudo pacman -Syu --noconfirm
-  sudo pacman -S --noconfirm base-devel git
-  cd /tmp
-  rm -rf yay-bin
-  git clone https://aur.archlinux.org/yay-bin.git
-  cd yay-bin
-  makepkg -si --noconfirm
-'
+  echo ""
+  echo "=== Installing yay ==="
+  distrobox enter --name "$BOX" -- bash -c '
+    set -euo pipefail
+    sudo pacman -Syu --noconfirm
+    sudo pacman -S --noconfirm base-devel git
+    cd /tmp
+    rm -rf yay-bin
+    git clone https://aur.archlinux.org/yay-bin.git
+    cd yay-bin
+    makepkg -si --noconfirm
+  '
 
-echo ""
-echo "=== Installing Stremio and codecs ==="
-distrobox enter --name "$BOX" -- bash -c '
-  set -euo pipefail
-  yay -S --noconfirm stremio-enhanced-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
-'
+  echo ""
+  echo "=== Installing Stremio and codecs ==="
+  distrobox enter --name "$BOX" -- bash -c '
+    set -euo pipefail
+    yay -S --noconfirm stremio-enhanced-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
+  '
 
-echo ""
-echo "=== Downloading Stremio server.js ==="
-distrobox enter --name "$BOX" -- bash -c '
-  set -euo pipefail
-  mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
-  wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
-    "https://dl.strem.io/server/v4.20.18/desktop/server.js"
-'
+  echo ""
+  echo "=== Downloading Stremio server.js ==="
+  distrobox enter --name "$BOX" -- bash -c '
+    set -euo pipefail
+    mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
+    wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
+      "https://dl.strem.io/server/v4.20.18/desktop/server.js"
+  '
 
-echo ""
-echo "=== Exporting Stremio as native app ==="
-distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
+  echo ""
+  echo "=== Exporting Stremio as native app ==="
+  distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
+fi
 
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
 echo ""
