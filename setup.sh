@@ -32,7 +32,7 @@ if gsettings list-schemas 2>/dev/null | grep -q "org.gnome.Ptyxis"; then
   # Fonts are installed by brew bundle above, but that runs later — this block
   # is idempotent so rerunning after brew is fine.
   PTYXIS_PROFILES=$(gsettings get org.gnome.Ptyxis profiles 2>/dev/null \
-    | tr -d "[]' " | tr ',' '\n')
+    | tr -d "[]' " | tr ',' '\n') || PTYXIS_PROFILES=""
   for _PROFILE in $PTYXIS_PROFILES; do
     [ -z "$_PROFILE" ] && continue
     _PATH="org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/$_PROFILE/"
