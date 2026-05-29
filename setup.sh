@@ -5,11 +5,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOX="arch-box"
 SKIP_ARCH=false
+SKIP_STREMIO=false
+SKIP_RUSTDESK=false
 
 for arg in "$@"; do
   case "$arg" in
     --skip-distrobox) SKIP_ARCH=true ;;
     --skip-arch)      SKIP_ARCH=true ;;
+    --skip-stremio)   SKIP_STREMIO=true ;;
+    --skip-rustdesk)  SKIP_RUSTDESK=true ;;
     *) echo "Unknown argument: $arg"; exit 1 ;;
   esac
 done
@@ -117,33 +121,46 @@ else
     makepkg -si --noconfirm
   '
 
-  echo ""
-  echo "=== Installing Stremio, RustDesk, and codecs ==="
-  distrobox enter --name "$BOX" -- bash -c '
-    set -euo pipefail
-    yay -S --noconfirm stremio-enhanced-bin rustdesk-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
-  '
+  if ! $SKIP_STREMIO && ! $SKIP_RUSTDESK; then
+    PKGS="stremio-enhanced-bin rustdesk-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav"
+  elif $SKIP_STREMIO; then
+    PKGS="rustdesk-bin"
+  else
+    PKGS="stremio-enhanced-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav"
+  fi
 
   echo ""
-  echo "=== Downloading Stremio server.js ==="
-  distrobox enter --name "$BOX" -- bash -c '
+  echo "=== Installing packages ==="
+  distrobox enter --name "$BOX" -- bash -c "
     set -euo pipefail
-    mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
-    wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
-      "https://dl.strem.io/server/v4.20.18/desktop/server.js"
-  '
+    yay -S --noconfirm $PKGS
+  "
 
-  echo ""
-  echo "=== Enabling RustDesk service ==="
-  distrobox enter --name "$BOX" -- bash -c '
-    set -euo pipefail
-    sudo systemctl enable --now rustdesk
-  '
+  if ! $SKIP_STREMIO; then
+    echo ""
+    echo "=== Downloading Stremio server.js ==="
+    distrobox enter --name "$BOX" -- bash -c '
+      set -euo pipefail
+      mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
+      wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
+        "https://dl.strem.io/server/v4.20.18/desktop/server.js"
+    '
+    echo ""
+    echo "=== Exporting Stremio ==="
+    distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
+  fi
 
-  echo ""
-  echo "=== Exporting Stremio and RustDesk as native apps ==="
-  distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
-  distrobox enter --name "$BOX" -- distrobox-export --app rustdesk
+  if ! $SKIP_RUSTDESK; then
+    echo ""
+    echo "=== Enabling RustDesk service ==="
+    distrobox enter --name "$BOX" -- bash -c '
+      set -euo pipefail
+      sudo systemctl enable --now rustdesk
+    '
+    echo ""
+    echo "=== Exporting RustDesk ==="
+    distrobox enter --name "$BOX" -- distrobox-export --app rustdesk
+  fi
 fi
 
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
