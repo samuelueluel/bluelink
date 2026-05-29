@@ -98,28 +98,35 @@ echo ""
 if $SKIP_ARCH; then
   echo "=== Skipping arch-box setup (--skip-arch) ==="
 else
-  echo "=== Removing existing distrobox and exports ==="
-  distrobox rm --force --yes "$BOX" 2>/dev/null || true
-  rm -f "$HOME/.local/share/applications/"*stremio* 2>/dev/null || true
-  rm -f "$HOME/.local/bin/"*stremio* 2>/dev/null || true
-  rm -rf "$HOME/.config/stremio-enhanced" 2>/dev/null || true
+  PARTIAL=$( $SKIP_STREMIO || $SKIP_RUSTDESK && echo true || echo false )
 
-  echo ""
-  echo "=== Creating Arch Linux distrobox ==="
-  distrobox create --name "$BOX" --image archlinux:latest --yes
+  if $PARTIAL; then
+    echo "=== Using existing arch-box (partial install) ==="
+    distrobox create --name "$BOX" --image archlinux:latest --yes 2>/dev/null || true
+  else
+    echo "=== Removing existing distrobox and exports ==="
+    distrobox rm --force --yes "$BOX" 2>/dev/null || true
+    rm -f "$HOME/.local/share/applications/"*stremio* 2>/dev/null || true
+    rm -f "$HOME/.local/bin/"*stremio* 2>/dev/null || true
+    rm -rf "$HOME/.config/stremio-enhanced" 2>/dev/null || true
 
-  echo ""
-  echo "=== Installing yay ==="
-  distrobox enter --name "$BOX" -- bash -c '
-    set -euo pipefail
-    sudo pacman -Syu --noconfirm
-    sudo pacman -S --noconfirm base-devel git
-    cd /tmp
-    rm -rf yay-bin
-    git clone https://aur.archlinux.org/yay-bin.git
-    cd yay-bin
-    makepkg -si --noconfirm
-  '
+    echo ""
+    echo "=== Creating Arch Linux distrobox ==="
+    distrobox create --name "$BOX" --image archlinux:latest --yes
+
+    echo ""
+    echo "=== Installing yay ==="
+    distrobox enter --name "$BOX" -- bash -c '
+      set -euo pipefail
+      sudo pacman -Syu --noconfirm
+      sudo pacman -S --noconfirm base-devel git
+      cd /tmp
+      rm -rf yay-bin
+      git clone https://aur.archlinux.org/yay-bin.git
+      cd yay-bin
+      makepkg -si --noconfirm
+    '
+  fi
 
   if ! $SKIP_STREMIO && ! $SKIP_RUSTDESK; then
     PKGS="stremio-enhanced-bin rustdesk-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav"
