@@ -52,6 +52,10 @@ EOF
 echo ""
 echo "=== Installing dotfiles ==="
 cp "$SCRIPT_DIR/dot_zshrc" "$HOME/.zshrc"
+mkdir -p "$HOME/.config/environment.d"
+cat > "$HOME/.config/environment.d/homebrew.conf" << 'EOF'
+PATH=/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin
+EOF
 mkdir -p "$HOME/.config"
 cp "$SCRIPT_DIR/dot_config/starship.toml" "$HOME/.config/starship.toml"
 
