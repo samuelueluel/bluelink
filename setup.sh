@@ -156,15 +156,12 @@ distrobox create --name fedora-box --image fedora:latest --yes
 
 echo ""
 echo "=== Installing RustDesk in fedora-box ==="
-distrobox enter --name fedora-box -- bash << 'RUSTDESK_INSTALL'
+distrobox enter --name fedora-box -- bash -c '
   set -euo pipefail
   sudo dnf install -y wget curl
-  RUSTDESK_VER=$(curl -fsSL https://api.github.com/repos/rustdesk/rustdesk/releases/latest \
-    | grep "tag_name" | sed 's/.*"v\([^"]*\)".*/\1/')
-  wget -O /tmp/rustdesk.rpm \
-    "https://github.com/rustdesk/rustdesk/releases/download/${RUSTDESK_VER}/rustdesk-${RUSTDESK_VER}-0.x86_64.rpm"
-  sudo dnf install -y /tmp/rustdesk.rpm
-RUSTDESK_INSTALL
+  sudo wget -O /etc/yum.repos.d/rustdesk.repo https://raw.githubusercontent.com/rustdesk/rustdesk/master/res/rpm-gui/rustdesk.repo
+  sudo dnf install -y rustdesk
+'
 
 echo ""
 echo "=== Enabling RustDesk service ==="
