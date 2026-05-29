@@ -159,8 +159,8 @@ echo "=== Installing RustDesk in fedora-box ==="
 distrobox enter --name fedora-box -- bash -c '
   set -euo pipefail
   sudo dnf install -y wget curl
-  sudo wget -O /etc/yum.repos.d/rustdesk.repo https://raw.githubusercontent.com/rustdesk/rustdesk/master/res/rpm-gui/rustdesk.repo
-  sudo dnf install -y rustdesk
+  wget -O /tmp/rustdesk.rpm https://download.rustdesk.com/rustdesk-x86_64.rpm
+  sudo dnf install -y /tmp/rustdesk.rpm
 '
 
 echo ""
