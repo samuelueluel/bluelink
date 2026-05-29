@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# NOTE: Tailscale must be set up manually after running this script — run `tailscale up` and authenticate via the printed URL.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
