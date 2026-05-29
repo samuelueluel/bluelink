@@ -4,11 +4,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOX="arch-box"
-SKIP_DISTROBOX=false
+SKIP_ARCH=false
+SKIP_FEDORA=false
 
 for arg in "$@"; do
   case "$arg" in
-    --skip-distrobox) SKIP_DISTROBOX=true ;;
+    --skip-distrobox) SKIP_ARCH=true; SKIP_FEDORA=true ;;
+    --skip-arch)      SKIP_ARCH=true ;;
+    --skip-fedora)    SKIP_FEDORA=true ;;
     *) echo "Unknown argument: $arg"; exit 1 ;;
   esac
 done
@@ -90,8 +93,8 @@ fi
 
 # ── Arch distrobox ────────────────────────────────────────────────────────────
 echo ""
-if $SKIP_DISTROBOX; then
-  echo "=== Skipping distrobox setup (--skip-distrobox) ==="
+if $SKIP_ARCH; then
+  echo "=== Skipping arch-box setup (--skip-arch) ==="
 else
   echo "=== Removing existing distrobox and exports ==="
   distrobox rm --force --yes "$BOX" 2>/dev/null || true
@@ -139,6 +142,9 @@ fi
 
 # ── Fedora distrobox (RustDesk) ───────────────────────────────────────────────
 echo ""
+if $SKIP_FEDORA; then
+  echo "=== Skipping fedora-box setup (--skip-fedora) ==="
+else
 echo "=== Removing existing fedora-box and exports ==="
 distrobox rm --force --yes fedora-box 2>/dev/null || true
 rm -f "$HOME/.local/share/applications/"*rustdesk* 2>/dev/null || true
@@ -150,15 +156,15 @@ distrobox create --name fedora-box --image fedora:latest --yes
 
 echo ""
 echo "=== Installing RustDesk in fedora-box ==="
-distrobox enter --name fedora-box -- bash -c '
+distrobox enter --name fedora-box -- bash << 'RUSTDESK_INSTALL'
   set -euo pipefail
-  sudo dnf install -y wget
+  sudo dnf install -y wget curl
   RUSTDESK_VER=$(curl -fsSL https://api.github.com/repos/rustdesk/rustdesk/releases/latest \
     | grep "tag_name" | sed 's/.*"v\([^"]*\)".*/\1/')
   wget -O /tmp/rustdesk.rpm \
     "https://github.com/rustdesk/rustdesk/releases/download/${RUSTDESK_VER}/rustdesk-${RUSTDESK_VER}-0.x86_64.rpm"
   sudo dnf install -y /tmp/rustdesk.rpm
-'
+RUSTDESK_INSTALL
 
 echo ""
 echo "=== Enabling RustDesk service ==="
@@ -170,6 +176,7 @@ distrobox enter --name fedora-box -- bash -c '
 echo ""
 echo "=== Exporting RustDesk as native app ==="
 distrobox enter --name fedora-box -- distrobox-export --app rustdesk
+fi
 
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
 echo ""
