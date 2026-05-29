@@ -5,13 +5,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOX="arch-box"
 SKIP_ARCH=false
-SKIP_FEDORA=false
+SKIP_UBUNTU=false
 
 for arg in "$@"; do
   case "$arg" in
-    --skip-distrobox) SKIP_ARCH=true; SKIP_FEDORA=true ;;
+    --skip-distrobox) SKIP_ARCH=true; SKIP_UBUNTU=true ;;
     --skip-arch)      SKIP_ARCH=true ;;
-    --skip-fedora)    SKIP_FEDORA=true ;;
+    --skip-ubuntu)    SKIP_UBUNTU=true ;;
     *) echo "Unknown argument: $arg"; exit 1 ;;
   esac
 done
@@ -142,8 +142,8 @@ fi
 
 # ── Fedora distrobox (RustDesk) ───────────────────────────────────────────────
 echo ""
-if $SKIP_FEDORA; then
-  echo "=== Skipping fedora-box setup (--skip-fedora) ==="
+if $SKIP_UBUNTU; then
+  echo "=== Skipping ubuntu-box setup (--skip-ubuntu) ==="
 else
 echo "=== Removing existing ubuntu-box and exports ==="
 distrobox rm --force --yes ubuntu-box 2>/dev/null || true
