@@ -159,11 +159,23 @@ else
 
   if ! $SKIP_RUSTDESK; then
     echo ""
-    echo "=== Enabling RustDesk service ==="
-    distrobox enter --name "$BOX" -- bash -c '
-      set -euo pipefail
-      sudo systemctl enable --now rustdesk
-    '
+    echo "=== Creating RustDesk user service ==="
+    mkdir -p "$HOME/.config/systemd/user"
+    cat > "$HOME/.config/systemd/user/rustdesk.service" << 'EOF'
+[Unit]
+Description=RustDesk remote desktop (arch-box)
+After=network.target
+
+[Service]
+ExecStart=distrobox enter --name arch-box -- rustdesk --service
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+EOF
+    systemctl --user daemon-reload
+    systemctl --user enable --now rustdesk
+
     echo ""
     echo "=== Exporting RustDesk ==="
     distrobox enter --name "$BOX" -- distrobox-export --app rustdesk
