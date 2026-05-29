@@ -136,6 +136,40 @@ else
   distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
 fi
 
+# ── Fedora distrobox (RustDesk) ───────────────────────────────────────────────
+echo ""
+echo "=== Removing existing fedora-box and exports ==="
+distrobox rm --force --yes fedora-box 2>/dev/null || true
+rm -f "$HOME/.local/share/applications/"*rustdesk* 2>/dev/null || true
+rm -f "$HOME/.local/bin/"*rustdesk* 2>/dev/null || true
+
+echo ""
+echo "=== Creating Fedora distrobox ==="
+distrobox create --name fedora-box --image fedora:latest --yes
+
+echo ""
+echo "=== Installing RustDesk in fedora-box ==="
+distrobox enter --name fedora-box -- bash -c '
+  set -euo pipefail
+  sudo dnf install -y wget
+  RUSTDESK_VER=$(curl -fsSL https://api.github.com/repos/rustdesk/rustdesk/releases/latest \
+    | grep "tag_name" | sed 's/.*"v\([^"]*\)".*/\1/')
+  wget -O /tmp/rustdesk.rpm \
+    "https://github.com/rustdesk/rustdesk/releases/download/${RUSTDESK_VER}/rustdesk-${RUSTDESK_VER}-0.x86_64.rpm"
+  sudo dnf install -y /tmp/rustdesk.rpm
+'
+
+echo ""
+echo "=== Enabling RustDesk service ==="
+distrobox enter --name fedora-box -- bash -c '
+  set -euo pipefail
+  sudo systemctl enable --now rustdesk
+'
+
+echo ""
+echo "=== Exporting RustDesk as native app ==="
+distrobox enter --name fedora-box -- distrobox-export --app rustdesk
+
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Installing Flatpaks ==="
