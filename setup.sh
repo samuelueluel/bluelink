@@ -145,34 +145,35 @@ echo ""
 if $SKIP_FEDORA; then
   echo "=== Skipping fedora-box setup (--skip-fedora) ==="
 else
-echo "=== Removing existing fedora-box and exports ==="
-distrobox rm --force --yes fedora-box 2>/dev/null || true
+echo "=== Removing existing ubuntu-box and exports ==="
+distrobox rm --force --yes ubuntu-box 2>/dev/null || true
 rm -f "$HOME/.local/share/applications/"*rustdesk* 2>/dev/null || true
 rm -f "$HOME/.local/bin/"*rustdesk* 2>/dev/null || true
 
 echo ""
-echo "=== Creating Fedora distrobox ==="
-distrobox create --name fedora-box --image fedora:latest --yes
+echo "=== Creating Ubuntu distrobox ==="
+distrobox create --name ubuntu-box --image ubuntu:latest --yes
 
 echo ""
-echo "=== Installing RustDesk in fedora-box ==="
-distrobox enter --name fedora-box -- bash -c '
+echo "=== Installing RustDesk in ubuntu-box ==="
+distrobox enter --name ubuntu-box -- bash -c '
   set -euo pipefail
-  sudo dnf install -y wget curl
-  wget -O /tmp/rustdesk.rpm https://download.rustdesk.com/rustdesk-x86_64.rpm
-  sudo dnf install -y /tmp/rustdesk.rpm
+  sudo apt-get update -y
+  sudo apt-get install -y wget
+  wget -O /tmp/rustdesk.deb https://download.rustdesk.com/rustdesk-x86_64.deb
+  sudo apt-get install -y /tmp/rustdesk.deb
 '
 
 echo ""
 echo "=== Enabling RustDesk service ==="
-distrobox enter --name fedora-box -- bash -c '
+distrobox enter --name ubuntu-box -- bash -c '
   set -euo pipefail
   sudo systemctl enable --now rustdesk
 '
 
 echo ""
 echo "=== Exporting RustDesk as native app ==="
-distrobox enter --name fedora-box -- distrobox-export --app rustdesk
+distrobox enter --name ubuntu-box -- distrobox-export --app rustdesk
 fi
 
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
