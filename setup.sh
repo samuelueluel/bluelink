@@ -5,13 +5,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOX="arch-box"
 SKIP_ARCH=false
-SKIP_UBUNTU=false
 
 for arg in "$@"; do
   case "$arg" in
-    --skip-distrobox) SKIP_ARCH=true; SKIP_UBUNTU=true ;;
+    --skip-distrobox) SKIP_ARCH=true ;;
     --skip-arch)      SKIP_ARCH=true ;;
-    --skip-ubuntu)    SKIP_UBUNTU=true ;;
     *) echo "Unknown argument: $arg"; exit 1 ;;
   esac
 done
@@ -120,10 +118,10 @@ else
   '
 
   echo ""
-  echo "=== Installing Stremio and codecs ==="
+  echo "=== Installing Stremio, RustDesk, and codecs ==="
   distrobox enter --name "$BOX" -- bash -c '
     set -euo pipefail
-    yay -S --noconfirm stremio-enhanced-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
+    yay -S --noconfirm stremio-enhanced-bin rustdesk-bin ffmpeg gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav
   '
 
   echo ""
@@ -136,44 +134,16 @@ else
   '
 
   echo ""
-  echo "=== Exporting Stremio as native app ==="
+  echo "=== Enabling RustDesk service ==="
+  distrobox enter --name "$BOX" -- bash -c '
+    set -euo pipefail
+    sudo systemctl enable --now rustdesk
+  '
+
+  echo ""
+  echo "=== Exporting Stremio and RustDesk as native apps ==="
   distrobox enter --name "$BOX" -- distrobox-export --app stremio-enhanced
-fi
-
-# ── Fedora distrobox (RustDesk) ───────────────────────────────────────────────
-echo ""
-if $SKIP_UBUNTU; then
-  echo "=== Skipping ubuntu-box setup (--skip-ubuntu) ==="
-else
-echo "=== Removing existing ubuntu-box and exports ==="
-distrobox rm --force --yes ubuntu-box 2>/dev/null || true
-rm -f "$HOME/.local/share/applications/"*rustdesk* 2>/dev/null || true
-rm -f "$HOME/.local/bin/"*rustdesk* 2>/dev/null || true
-
-echo ""
-echo "=== Creating Ubuntu distrobox ==="
-distrobox create --name ubuntu-box --image ubuntu:latest --yes
-
-echo ""
-echo "=== Installing RustDesk in ubuntu-box ==="
-distrobox enter --name ubuntu-box -- bash -c '
-  set -euo pipefail
-  sudo apt-get update -y
-  sudo apt-get install -y wget
-  wget -O /tmp/rustdesk.deb https://download.rustdesk.com/rustdesk-x86_64.deb
-  sudo apt-get install -y /tmp/rustdesk.deb
-'
-
-echo ""
-echo "=== Enabling RustDesk service ==="
-distrobox enter --name ubuntu-box -- bash -c '
-  set -euo pipefail
-  sudo systemctl enable --now rustdesk
-'
-
-echo ""
-echo "=== Exporting RustDesk as native app ==="
-distrobox enter --name ubuntu-box -- distrobox-export --app rustdesk
+  distrobox enter --name "$BOX" -- distrobox-export --app rustdesk
 fi
 
 # ── Flatpaks ──────────────────────────────────────────────────────────────────
