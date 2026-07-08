@@ -153,8 +153,19 @@ else
     distrobox enter --name "$BOX" -- bash -c '
       set -euo pipefail
       mkdir -p "$HOME/.config/stremio-enhanced/streamingserver"
-      wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" \
-        "https://dl.strem.io/server/v4.20.18/desktop/server.js"
+      
+      # Dynamically extract the exact server.js URL from app.asar
+      SERVER_URL=$(strings /usr/lib/stremio-enhanced/app.asar | grep -o -E "https://dl.strem.io/server/v4\.[0-9]+\.[0-9]+/desktop/server.js" | sort -V | tail -n 1)
+      if [ -z "$SERVER_URL" ]; then
+        echo "Error: Could not extract server.js URL from app.asar"
+        exit 1
+      fi
+      
+      wget -O "$HOME/.config/stremio-enhanced/streamingserver/server.js" "$SERVER_URL"
+      
+      # Write version.txt
+      SERVER_VERSION=$(echo "$SERVER_URL" | grep -o -E "v4\.[0-9]+\.[0-9]+")
+      echo -n "$SERVER_VERSION" > "$HOME/.config/stremio-enhanced/streamingserver/version.txt"
     '
     echo ""
     echo "=== Exporting Stremio ==="
